@@ -67,7 +67,7 @@ a {
   text-decoration: none;
 }
 
-.btn {
+/* .btn {
   border: none;
   width: 15em;
   height: 5em;
@@ -79,12 +79,12 @@ a {
   background: #1C1A1C;
   cursor: pointer;
   transition: all 450ms ease-in-out;
-}
+} */
 
-.sparkle {
+/* .sparkle {
   fill: #AAAAAA;
   transition: all 800ms ease;
-}
+} */
 
 .text {
   font-weight: 600;
@@ -92,7 +92,7 @@ a {
   font-size: medium;
 }
 
-.btn:hover {
+/* .btn:hover {
   background: linear-gradient(0deg, #A47CF3, #683FEA);
   box-shadow: inset 0px 1px 0px 0px rgba(255, 255, 255, 0.4),
     inset 0px -4px 0px 0px rgba(0, 0, 0, 0.2),
@@ -108,4 +108,103 @@ a {
 .btn:hover .sparkle {
   fill: white;
   transform: scale(1.2);
+} */
+
+.button-container{
+    position:absolute;
+    top:60vh;
+    left:50%;
+    transform:translateX(-50%);
+
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+    align-items:center;
+
+    width:100%;
+}
+
+.glass-btn{
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+
+    width:280px;
+    padding:18px 28px;
+
+    color:white;
+    text-decoration:none;
+
+    border-radius:18px;
+
+    background:rgba(255,255,255,.08);
+
+    border:1px solid rgba(255,255,255,.2);
+
+    backdrop-filter:blur(18px);
+    -webkit-backdrop-filter:blur(18px);
+
+    box-shadow:
+        0 8px 32px rgba(0,0,0,.35),
+        inset 0 1px 0 rgba(255,255,255,.1);
+
+    transition:.35s ease;
+}
+
+.glass-btn:hover{
+
+    transform:translateY(-6px) scale(1.04);
+
+    background:rgba(255,255,255,.14);
+
+    box-shadow:
+        0 0 30px rgba(255,255,255,.25),
+        0 18px 40px rgba(0,0,0,.45);
+
+}
+
+.glass-btn .text{
+
+    font-size:18px;
+    font-weight:600;
+    letter-spacing:.5px;
+
+}
+
+.sparkle{
+
+    transition:.35s;
+
+}
+
+.glass-btn:hover .sparkle{
+
+    transform:rotate(20deg) scale(1.2);
+
+}
+
+.bloom-btn{
+
+    border-color:#ff9cf2;
+
+}
+
+.bloom-btn:hover{
+
+    box-shadow:
+        0 0 35px rgba(255,120,255,.45),
+        0 18px 40px rgba(0,0,0,.45);
+
+}
+
+@media (max-width:600px){
+
+    .glass-btn{
+
+        width:88%;
+
+    }
+
 }
