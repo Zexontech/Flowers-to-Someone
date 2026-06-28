@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="color-scheme" content="dark" />
+<title>Click to Bloom</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%2303050b'/%3E%3Ccircle cx='16' cy='16' r='6' fill='%234fb6ff'/%3E%3C/svg%3E" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;1,400;1,500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --void:#03050b;
+    --void-2:#080f1e;
+    --ink:#0e2148;
+    --steel:#2c61ab;
+    --sky:#4fb6ff;
+    --frost:#eef8ff;
+    --px:0; --py:0;
+  }
+
+  *{ box-sizing:border-box; }
+
+  html,body{
+    margin:0; padding:0; width:100%; height:100%;
+    background:var(--void);
+    overflow:hidden;
+    touch-action:manipulation;
+    -webkit-tap-highlight-color:transparent;
+  }
+
+  /* ---------- atmosphere ---------- */
+
+  .sky{
+    position:fixed; inset:-5%;
+    background:
+      radial-gradient(ellipse 60% 45% at 50% 18%, var(--void-2), transparent 70%),
+      linear-gradient(180deg, var(--void) 0%, #050a16 55%, var(--void) 100%);
+    z-index:0;
+    transition:transform .2s ease-out;
+  }
+
+  .stars{ position:fixed; inset:0; z-index:0; pointer-events:none; transition:transform .2s ease-out; }
+  .star{
+    position:absolute; border-radius:50%;
+    background:var(--frost);
+    animation:twinkle var(--dur,3s) ease-in-out var(--delay,0s) infinite;
+  }
+  @keyframes twinkle{
+    0%,100%{ opacity:.18; transform:scale(.7); }
+    50%{ opacity:1; transform:scale(1.2); }
+  }
+
+  .nebula{ position:fixed; inset:0; z-index:0; pointer-events:none; filter:blur(70px); transition:transform .2s ease-out; }
+  .nebula__blob{
+    position:absolute; border-radius:50%; opacity:.16;
+    background:radial-gradient(circle, var(--sky), transparent 70%);
+    animation:drift 24s ease-in-out infinite alternate;
+  }
+  .nebula__blob--a{ width:46vw; height:46vw; left:8%; top:8%; }
+  .nebula__blob--b{ width:38vw; height:38vw; right:6%; top:38%; animation-duration:30s; animation-delay:-6s; }
+  @keyframes drift{
+    0%{ transform:translate(0,0) scale(1); }
+    100%{ transform:translate(3%,-4%) scale(1.12); }
+  }
+
+  .vignette{
+    position:fixed; inset:0; z-index:2; pointer-events:none;
+    background:radial-gradient(ellipse at 50% 60%, transparent 35%, rgba(0,0,0,.6) 100%);
+  }
+
+  /* ---------- intro ---------- */
+
+  .intro{
+    position:fixed; inset:0; z-index:10;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; background:transparent;
+  }
+  .intro__text{
+    font-family:'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+    font-style:italic; font-weight:400;
+    font-size:clamp(1.5rem, 4.4vw, 2.9rem);
+    letter-spacing:.05em;
+    color:var(--frost);
+    text-align:center;
+    padding:0 1.2em;
+    margin:0;
+    user-select:none;
+    text-shadow:0 0 18px rgba(79,182,255,.55), 0 0 50px rgba(79,182,255,.25);
+    animation:breathe 3.6s ease-in-out infinite;
+  }
+  @keyframes breathe{
+    0%,100%{ opacity:.82; transform:scale(1); }
+    50%{ opacity:1; transform:scale(1.018); }
+  }
+  .intro:focus-visible{ outline:none; }
+  .intro:focus-visible .intro__text{
+    text-shadow:0 0 0 0, 0 0 24px rgba(79,182,255,.8), 0 0 60px rgba(79,182,255,.35);
+  }
+  .intro--gone{
+    opacity:0; transform:scale(1.06); pointer-events:none;
+    transition:opacity .9s ease, transform .9s ease;
+  }
+
+  /* ---------- flower anatomy ---------- */
+
+  .flower{
+    position:fixed; left:0; top:0; width:0; height:0;
+    z-index:5;
+    transform:scale(var(--s,1)) rotate(var(--r,0deg));
+    transform-origin:0 0;
+    filter:hue-rotate(var(--hue,0deg));
+  }
+  .flower--main{
+    left:50% !important; top:auto !important; bottom:13vh;
+    --s:1.55; --r:0deg;
+    z-index:6;
+  }
+
+  .flower__halo{
+    position:absolute; left:50%; bottom:88px; width:150px; height:150px;
+    transform:translateX(-50%);
+    pointer-events:none; opacity:0;
+    transition:opacity 1.1s ease 1.3s;
+  }
+  .flower--bloom .flower__halo{ opacity:1; }
+  .flower__spark{
+    position:absolute; bottom:0; width:3px; height:3px; border-radius:50%;
+    background:var(--frost);
+    box-shadow:0 0 6px var(--sky);
+    opacity:0;
+    animation:sparkFloat var(--dur,5s) ease-in-out var(--delay,0s) infinite;
+    animation-play-state:paused;
+  }
+  .flower--bloom .flower__spark{ animation-play-state:running; }
+  @keyframes sparkFloat{
+    0%{ transform:translate(0,0) scale(.4); opacity:0; }
+    15%{ opacity:.85; }
+    55%{ transform:translate(var(--dx,12px),-78px) scale(1); opacity:.65; }
+    100%{ transform:translate(calc(var(--dx,12px) * 1.6),-140px) scale(.25); opacity:0; }
+  }
+
+  .flower__stem{
+    position:absolute; left:50%; bottom:0; width:4px; height:100px;
+    background:linear-gradient(to top, var(--ink), var(--steel));
+    border-radius:3px;
+    box-shadow:0 0 8px rgba(79,182,255,.3);
+    transform:translateX(-50%) scaleY(0);
+    transform-origin:50% 100%;
+    transition:transform 1.05s cubic-bezier(.22,.85,.32,1);
+  }
+  .flower--bloom .flower__stem{ transform:translateX(-50%) scaleY(1); }
+
+  .flower__leaf{
+    position:absolute; left:50%; width:26px; height:14px;
+    background:linear-gradient(135deg, var(--steel), var(--ink));
+    border-radius:50% 50% 50% 4% / 60% 60% 40% 40%;
+    box-shadow:0 0 8px rgba(79,182,255,.2);
+    opacity:0;
+    transition:opacity .7s ease, transform .9s cubic-bezier(.3,1.4,.45,1);
+  }
+  .flower__leaf--l{ bottom:38px; transform:translateX(-95%) rotate(15deg) scale(.25); transform-origin:100% 50%; transition-delay:.28s; }
+  .flower__leaf--r{ bottom:58px; transform:translateX(-5%) rotate(-15deg) scale(.25) scaleX(-1); transform-origin:0% 50%; transition-delay:.42s; }
+  .flower--bloom .flower__leaf--l{ opacity:1; transform:translateX(-95%) rotate(32deg) scale(1); }
+  .flower--bloom .flower__leaf--r{ opacity:1; transform:translateX(-5%) rotate(-32deg) scale(1) scaleX(-1); }
+  .flower--idle .flower__leaf--l{ animation:leafSwayL 5.2s ease-in-out infinite; }
+  .flower--idle .flower__leaf--r{ animation:leafSwayR 5.6s ease-in-out infinite; }
+  @keyframes leafSwayL{
+    0%,100%{ transform:translateX(-95%) rotate(28deg) scale(1); }
+    50%{ transform:translateX(-95%) rotate(38deg) scale(1); }
+  }
+  @keyframes leafSwayR{
+    0%,100%{ transform:translateX(-5%) rotate(-28deg) scale(1) scaleX(-1); }
+    50%{ transform:translateX(-5%) rotate(-38deg) scale(1) scaleX(-1); }
+  }
+
+  .flower__crown{
+    position:absolute; left:50%; bottom:100px;
+    transform:translateX(-50%);
+  }
+  .flower__crown-inner{ position:relative; transform-origin:50% 100%; }
+  .flower--idle .flower__crown-inner{ animation:crownSway 6.2s ease-in-out infinite; }
+  @keyframes crownSway{
+    0%,100%{ transform:rotate(-2deg); }
+    50%{ transform:rotate(2.2deg); }
+  }
+
+  .flower__bud{ position:relative; }
+  .flower--idle .flower__bud{ animation:budBreathe 4.4s ease-in-out infinite; }
+  @keyframes budBreathe{
+    0%,100%{ transform:scale(1); }
+    50%{ transform:scale(1.035); }
+  }
+
+  .flower__petals{ position:relative; }
+  .flower__petal{
+    position:absolute; top:0; left:0;
+    width:20px; height:54px;
+    margin-left:-10px; margin-top:-54px;
+    border-radius:50% 50% 50% 50% / 65% 65% 30% 30%;
+    background:linear-gradient(180deg, var(--frost) 0%, var(--sky) 38%, var(--steel) 72%, var(--ink) 100%);
+    box-shadow:0 0 16px rgba(79,182,255,.45);
+    opacity:0;
+    transform:rotate(var(--angle)) scale(.05);
+    transform-origin:50% 100%;
+    transition:transform 1.05s cubic-bezier(.34,1.5,.62,1), opacity .6s ease;
+    transition-delay:var(--pd,0s);
+  }
+  .flower--bloom .flower__petal{ opacity:.96; transform:rotate(var(--angle)) scale(1); }
+  .flower:hover .flower__petal{ filter:brightness(1.18); }
+
+  .flower__stamens{ position:relative; }
+  .flower__stamen{
+    position:absolute; top:0; left:0; width:4px; height:4px; margin:-2px;
+    border-radius:50%; background:var(--frost);
+    box-shadow:0 0 6px var(--sky);
+    opacity:0;
+    transform:rotate(var(--angle)) translateY(-13px) scale(0);
+    transition:transform .85s cubic-bezier(.34,1.5,.62,1) .85s, opacity .5s ease .85s;
+  }
+  .flower--bloom .flower__stamen{ opacity:1; transform:rotate(var(--angle)) translateY(-13px) scale(1); }
+
+  .flower__core{
+    position:absolute; top:0; left:0; width:30px; height:30px; margin:-15px;
+    border-radius:50%;
+    background:radial-gradient(circle, var(--frost), var(--sky) 55%, transparent 100%);
+    box-shadow:0 0 28px 6px rgba(79,182,255,.6);
+    opacity:0; transform:scale(0);
+    transition:transform 1s cubic-bezier(.34,1.5,.62,1) .5s, opacity .5s ease .5s;
+  }
+  .flower--bloom .flower__core{ opacity:1; transform:scale(1); }
+  .flower--idle .flower__core{ animation:corePulse 3.4s ease-in-out infinite; }
+  .flower:hover .flower__core{ filter:brightness(1.25); }
+  @keyframes corePulse{
+    0%,100%{ transform:scale(1); box-shadow:0 0 28px 6px rgba(79,182,255,.6); }
+    50%{ transform:scale(1.12); box-shadow:0 0 44px 10px rgba(79,182,255,.85); }
+  }
+
+  /* ---------- cursor trail ---------- */
+
+  .trail-dot{
+    position:fixed; top:0; left:0; border-radius:50%;
+    background:radial-gradient(circle, var(--frost), var(--sky) 65%, transparent);
+    pointer-events:none; z-index:50; opacity:.85;
+    animation:trailFade .9s ease-out forwards;
+  }
+  @keyframes trailFade{
+    to{ transform:translateY(-22px) scale(.2); opacity:0; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .intro__text, .star, .nebula__blob, .flower__spark,
+    .flower--idle .flower__leaf--l, .flower--idle .flower__leaf--r,
+    .flower--idle .flower__crown-inner, .flower--idle .flower__bud,
+    .flower--idle .flower__core{
+      animation:none !important;
+    }
+    .flower__petal, .flower__stem, .flower__leaf, .flower__core, .flower__stamen{
+      transition-duration:.4s !important;
+    }
+    .trail-dot{ display:none; }
+  }
+
+  @media (max-width:520px){
+    .flower--main{ bottom:16vh; --s:1.25; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="sky" id="sky"></div>
+  <div class="stars" id="stars"></div>
+  <div class="nebula" id="nebula">
+    <div class="nebula__blob nebula__blob--a"></div>
+    <div class="nebula__blob nebula__blob--b"></div>
+  </div>
+  <div class="vignette"></div>
+
+  <div class="intro" id="intro" role="button" tabindex="0" aria-label="Click to bloom a flower">
+    <p class="intro__text">Click to blooms a flowers</p>
+  </div>
+
+<script>
+(function(){
+  "use strict";
+
+  var reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var root = document.documentElement;
+  var intro = document.getElementById('intro');
+  var starsLayer = document.getElementById('stars');
+  var skyLayer = document.getElementById('sky');
+  var nebulaLayer = document.getElementById('nebula');
+
+  var bloomed = false;
+  var garden = [];
+  var MAX_GARDEN = 24;
+
+  /* ---------- starfield ---------- */
+  function buildStars(){
+    var n = 110;
+    var frag = document.createDocumentFragment();
+    for(var i=0;i<n;i++){
+      var s = document.createElement('div');
+      s.className = 'star';
+      var size = (Math.random()*2 + 1).toFixed(2);
+      s.style.width = size + 'px';
+      s.style.height = size + 'px';
+      s.style.left = (Math.random()*100) + '%';
+      s.style.top = (Math.random()*100) + '%';
+      s.style.setProperty('--dur', (2 + Math.random()*3.5).toFixed(2) + 's');
+      s.style.setProperty('--delay', (Math.random()*5).toFixed(2) + 's');
+      frag.appendChild(s);
+    }
+    starsLayer.appendChild(frag);
+  }
+
+  /* ---------- flower factory ---------- */
+  function flowerInnerHTML(petalCount, sparkCount){
+    var petals = '';
+    var jitter = 0;
+    for(var i=0;i<petalCount;i++){
+      jitter = (Math.random()*8 - 4).toFixed(1);
+      var angle = ((360/petalCount)*i + parseFloat(jitter)).toFixed(1);
+      var delay = (i*0.07).toFixed(2);
+      petals += '<div class="flower__petal" style="--angle:' + angle + 'deg;--pd:' + delay + 's"></div>';
+    }
+    var stamens = '';
+    for(var j=0;j<6;j++){
+      stamens += '<div class="flower__stamen" style="--angle:' + (60*j) + 'deg"></div>';
+    }
+    var sparks = '';
+    for(var k=0;k<sparkCount;k++){
+      var dx = (Math.random()*60 - 30).toFixed(1);
+      var dur = (4 + Math.random()*3).toFixed(2);
+      var delay2 = (Math.random()*4).toFixed(2);
+      var leftPos = (30 + Math.random()*40).toFixed(1);
+      sparks += '<div class="flower__spark" style="--dx:' + dx + 'px;--dur:' + dur + 's;--delay:' + delay2 + 's;left:' + leftPos + '%"></div>';
+    }
+    return (
+      '<div class="flower__halo">' + sparks + '</div>' +
+      '<div class="flower__stem"></div>' +
+      '<div class="flower__leaf flower__leaf--l"></div>' +
+      '<div class="flower__leaf flower__leaf--r"></div>' +
+      '<div class="flower__crown">' +
+        '<div class="flower__crown-inner">' +
+          '<div class="flower__bud">' +
+            '<div class="flower__petals">' + petals + '</div>' +
+            '<div class="flower__stamens">' + stamens + '</div>' +
+            '<div class="flower__core"></div>' +
+          '</div>' +
+        '</div>' +
+      '</div>'
+    );
+  }
+
+  function buildFlower(opts){
+    opts = opts || {};
+    var el = document.createElement('div');
+    el.className = 'flower' + (opts.main ? ' flower--main' : '');
+    el.innerHTML = flowerInnerHTML(opts.petals || 7, opts.sparks || 5);
+    if(!opts.main){
+      el.style.left = opts.x + 'px';
+      el.style.top = opts.y + 'px';
+      el.style.setProperty('--s', opts.scale);
+      el.style.setProperty('--r', opts.rotate + 'deg');
+      el.style.setProperty('--hue', opts.hue + 'deg');
+    }
+    document.body.appendChild(el);
+    return el;
+  }
+
+  function bloom(el){
+    requestAnimationFrame(function(){
+      requestAnimationFrame(function(){
+        el.classList.add('flower--bloom');
+      });
+    });
+    var idleDelay = reducedMotion ? 200 : 2300;
+    clearTimeout(el._idleTimer);
+    el._idleTimer = setTimeout(function(){
+      el.classList.add('flower--idle');
+    }, idleDelay);
+  }
+
+  function plantFlower(x, y){
+    var scale = (0.45 + Math.random()*0.45).toFixed(2);
+    var rotate = (Math.random()*16 - 8).toFixed(1);
+    var hue = (Math.random()*30 - 15).toFixed(0);
+    var petals = 6 + Math.floor(Math.random()*4);
+    var el = buildFlower({ x:x, y:y, scale:scale, rotate:rotate, hue:hue, petals:petals, sparks:4 + Math.floor(Math.random()*3) });
+    garden.push(el);
+    if(garden.length > MAX_GARDEN){
+      var old = garden.shift();
+      clearTimeout(old._idleTimer);
+      if(old.parentNode){ old.parentNode.removeChild(old); }
+    }
+    bloom(el);
+  }
+
+  /* ---------- main flower ---------- */
+  var mainFlower = buildFlower({ main:true, petals:8, sparks:5 });
+
+  function startBloom(){
+    if(bloomed) return;
+    bloomed = true;
+    intro.classList.add('intro--gone');
+    setTimeout(function(){ intro.style.display = 'none'; }, 950);
+    bloom(mainFlower);
+  }
+
+  intro.addEventListener('keydown', function(e){
+    if(e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar'){
+      e.preventDefault();
+      startBloom();
+    }
+  });
+
+  document.addEventListener('click', function(e){
+    if(!bloomed){ startBloom(); return; }
+    plantFlower(e.clientX, e.clientY);
+  });
+
+  /* ---------- cursor trail + parallax ---------- */
+  var lastTrail = 0;
+  function spawnTrail(x, y){
+    var now = performance.now();
+    if(now - lastTrail < 60) return;
+    lastTrail = now;
+    var d = document.createElement('div');
+    d.className = 'trail-dot';
+    var size = 3 + Math.random()*3;
+    d.style.width = size + 'px';
+    d.style.height = size + 'px';
+    d.style.left = (x - size/2) + 'px';
+    d.style.top = (y - size/2) + 'px';
+    document.body.appendChild(d);
+    d.addEventListener('animationend', function(){ d.remove(); });
+  }
+
+  if(!reducedMotion){
+    window.addEventListener('pointermove', function(e){
+      var nx = (e.clientX / window.innerWidth - 0.5);
+      var ny = (e.clientY / window.innerHeight - 0.5);
+      skyLayer.style.transform = 'translate(' + (nx*-10) + 'px,' + (ny*-10) + 'px)';
+      starsLayer.style.transform = 'translate(' + (nx*-16) + 'px,' + (ny*-16) + 'px)';
+      nebulaLayer.style.transform = 'translate(' + (nx*-24) + 'px,' + (ny*-24) + 'px)';
+      spawnTrail(e.clientX, e.clientY);
+    }, { passive:true });
+  }
+
+  buildStars();
+})();
+</script>
+</body>
+</html>
